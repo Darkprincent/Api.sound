@@ -1,0 +1,152 @@
+openapi: 3.0.3
+info:
+  title: gen.sound API
+  description: Документация REST API для музыкальной платформы gen.sound
+  version: 1.0.0
+servers:
+  - url: http://api.gen-sound.ru/
+    description: Локальный сервер разработки
+
+paths:
+  /tracks:
+    get:
+      summary: Получить список всех треков
+      responses:
+        '200':
+          description: Успешный возврат списка треков
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrackWithAuthor'
+
+    post:
+      summary: Добавить новый трек
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Название трека
+                author_id:
+                  type: integer
+                  description: ID автора трека
+              required:
+                - title
+                - author_id
+      responses:
+        '201':
+          description: Трек успешно создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  track_id:
+                    type: string
+                  new_track:
+                    type: object
+
+  /tracks/{id}:
+    get:
+      summary: Получить трек по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Уникальный идентификатор трека
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Информация о треке найдена или возвращена ошибка "не найден"
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/TrackWithAuthor'
+                  - $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      summary: Обновить данные трека
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID трека для обновления
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                author_id:
+                  type: integer
+      responses:
+        '200':
+          description: Данные трека изменены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+    delete:
+      summary: Удалить трек
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID трека для удаления
+          schema:
+            type: integer
+      responses:
+        '410':
+          description: Трек удален (Gone)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+components:
+  schemas:
+    TrackWithAuthor:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        author_name:
+          type: string
+
+    StandardResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Track not found"
